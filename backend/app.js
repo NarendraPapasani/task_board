@@ -6,7 +6,7 @@ require("dotenv").config();
 const app = express();
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://localhost:5173/login"],
+    origin: ["http://localhost:5173", "http://localhost:5173/login","https://taskspane.netlify.app"],
     credentials: true,
   })
 );
