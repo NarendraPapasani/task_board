@@ -66,13 +66,6 @@ const signupSchema = z.object({
 const Login = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState();
-  const [isOtpOpen, setIsOtpOpen] = useState(false);
-  const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
-
-  const [authEmail, setAuthEmail] = useState("");
-  const [otp, setOtp] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [authFlow, setAuthFlow] = useState("register");
 
   //forms
   const loginForm = useForm({
@@ -129,94 +122,11 @@ const Login = () => {
         description: response.data.message,
         style: { background: "green", color: "white", border: "none" },
       });
-      setAuthEmail(data.email);
-      setAuthFlow("register");
-      setIsOtpOpen(true);
+      // Switch to login tab or let user do it
     } catch (error) {
       setIsLoading(false);
       toast.error("Registration Failed", {
         description: error.response?.data?.message || "Something went wrong",
-        style: { background: "red", color: "white", border: "none" },
-      });
-    }
-  };
-
-  const handleForgotPassword = async () => {
-    if (!authEmail) {
-      toast.error("Error", {
-        description: "Please enter your email",
-        style: { background: "red", color: "white", border: "none" },
-      });
-      return;
-    }
-    setIsLoading(true);
-    try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_BASE_URL}/auth/forgot-password`,
-        { email: authEmail }
-      );
-      setIsLoading(false);
-      toast.success("OTP Sent", {
-        description: response.data.message,
-        style: { background: "green", color: "white", border: "none" },
-      });
-      setAuthFlow("reset");
-      setIsForgotPasswordOpen(false);
-      setIsOtpOpen(true);
-    } catch (error) {
-      setIsLoading(false);
-      toast.error("Failed", {
-        description: error.response?.data?.message || "Error sending OTP",
-        style: { background: "red", color: "white", border: "none" },
-      });
-    }
-  };
-
-  const handleVerifyOrReset = async () => {
-    if (!otp)
-      return toast.error("Error", {
-        description: "Please enter OTP",
-        style: { background: "red", color: "white", border: "none" },
-      });
-
-    setIsLoading(true);
-    try {
-      let response;
-      if (authFlow === "register") {
-        response = await axios.post(
-          `${import.meta.env.VITE_API_BASE_URL}/auth/verify-email`,
-          { email: authEmail, otp }
-        );
-        toast.success("Verified", {
-          description: "Email verified successfully. Please login.",
-          style: { background: "green", color: "white", border: "none" },
-        });
-      } else {
-        if (!newPassword) {
-          setIsLoading(false);
-          return toast.error("Error", {
-            description: "Please enter new password",
-            style: { background: "red", color: "white", border: "none" },
-          });
-        }
-        response = await axios.post(
-          `${import.meta.env.VITE_API_BASE_URL}/auth/reset-password`,
-          { email: authEmail, otp, password: newPassword }
-        );
-        toast.success("Success", {
-          description: "Password reset successfully. Please login.",
-          style: { background: "green", color: "white", border: "none" },
-        });
-      }
-      setIsLoading(false);
-      setIsOtpOpen(false);
-      // Reset states
-      setOtp("");
-      setNewPassword("");
-    } catch (error) {
-      setIsLoading(false);
-      toast.error("Failed", {
-        description: error.response?.data?.message || "Verification failed",
         style: { background: "red", color: "white", border: "none" },
       });
     }
@@ -280,14 +190,6 @@ const Login = () => {
                       <FormItem>
                         <div className="flex justify-between items-center">
                           <FormLabel>Password</FormLabel>
-                          <Button
-                            className="px-0 font-normal text-blue-600 text-decoration-line: underline h-auto text-xs cursor-pointer"
-                            type="button"
-                            variant="link"
-                            onClick={() => setIsForgotPasswordOpen(true)}
-                          >
-                            Forgot Password?
-                          </Button>
                         </div>
                         <FormControl>
                           <Input
@@ -537,107 +439,6 @@ const Login = () => {
             <span>© 2025 ProU Technology</span>
           </div>
         </div>
-
-        <Dialog
-          open={isForgotPasswordOpen}
-          onOpenChange={setIsForgotPasswordOpen}
-        >
-          <DialogContent
-            onInteractOutside={(e) => {
-              e.preventDefault();
-            }}
-          >
-            <DialogHeader>
-              <DialogTitle>Reset Password</DialogTitle>
-              <DialogDescription>
-                Enter your email address and we'll send you a link to reset your
-                password.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="reset-email">Email</Label>
-                <Input
-                  id="reset-email"
-                  placeholder="please enter your email"
-                  value={authEmail}
-                  onChange={(e) => setAuthEmail(e.target.value)}
-                />
-              </div>
-              <Button
-                className="w-full cursor-pointer"
-                onClick={handleForgotPassword}
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  "Send Reset Link"
-                )}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        <Dialog open={isOtpOpen} onOpenChange={setIsOtpOpen}>
-          <DialogContent
-            className="sm:max-w-md"
-            onInteractOutside={(e) => {
-              e.preventDefault();
-            }}
-          >
-            <DialogHeader>
-              <DialogTitle>
-                {authFlow === "register" ? "Verify Email" : "Reset Password"}
-              </DialogTitle>
-              <DialogDescription>
-                {authFlow === "register"
-                  ? "Enter the OTP sent to your email."
-                  : "Enter OTP and your new password."}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="flex flex-col items-center justify-center py-4 gap-4">
-              <InputOTP
-                maxLength={6}
-                value={otp}
-                onChange={(val) => setOtp(val)}
-              >
-                <InputOTPGroup>
-                  <InputOTPSlot index={0} />
-                  <InputOTPSlot index={1} />
-                  <InputOTPSlot index={2} />
-                </InputOTPGroup>
-                <InputOTPGroup>
-                  <InputOTPSlot index={3} />
-                  <InputOTPSlot index={4} />
-                  <InputOTPSlot index={5} />
-                </InputOTPGroup>
-              </InputOTP>
-
-              {authFlow === "reset" && (
-                <Input
-                  type="password"
-                  placeholder="New Password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                />
-              )}
-            </div>
-            <Button
-              onClick={handleVerifyOrReset}
-              className="w-full cursor-pointer"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : authFlow === "register" ? (
-                "Verify Code"
-              ) : (
-                "Reset Password"
-              )}
-            </Button>
-          </DialogContent>
-        </Dialog>
       </div>
     </div>
   );
